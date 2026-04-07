@@ -1,0 +1,2 @@
+-- Placeholder for your Supabase schema
+-- You can populate this from your README data as you build features.
