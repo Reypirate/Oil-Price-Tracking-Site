@@ -3,30 +3,37 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbo",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "bun next dev --turbo",
+    "build": "bun next build",
+    "start": "bun next start",
+    "lint": "bunx oxlint --fix && bunx biome check --write . && bun next lint",
+    "format": "bunx biome format --write .",
+    "prepare": "husky"
   },
   "dependencies": {
+    "@supabase/supabase-js": "latest",
+    "clsx": "latest",
+    "lucide-react": "latest",
+    "next": "latest",
     "react": "canary",
     "react-dom": "canary",
-    "next": "latest",
-    "lucide-react": "latest",
     "recharts": "latest",
-    "@supabase/supabase-js": "latest",
     "resend": "latest",
-    "clsx": "latest",
-    "tailwind-merge": "latest"
+    "tailwind-merge": "latest",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
-    "typescript": "latest",
+    "@biomejs/biome": "^2.4.10",
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
+    "eslint": "latest",
+    "eslint-config-next": "latest",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "oxlint": "^1.59.0",
     "postcss": "latest",
     "tailwindcss": "latest",
-    "eslint": "latest",
-    "eslint-config-next": "latest"
+    "typescript": "latest"
   }
 }

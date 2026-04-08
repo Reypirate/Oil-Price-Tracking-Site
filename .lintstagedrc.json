@@ -1,0 +1,6 @@
+{
+  "*.{js,jsx,ts,tsx}": [
+    "bunx oxlint --fix",
+    "bunx biome check --write --no-errors-on-unmatched"
+  ]
+}

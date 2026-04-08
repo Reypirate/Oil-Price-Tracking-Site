@@ -54,7 +54,7 @@ To run this project locally, you must establish accounts and obtain API keys for
     ```
 
 4.  **Database Initialization:**
-    Navigate to your Supabase project dashboard. Open the SQL Editor and execute the contents of the `supabase/schema.sql` file located in this repository. This will provision the necessary tables (`users`, `portfolios`, `alerts`, `subscriptions`) and enforce Row Level Security policies.
+    Navigate to your Supabase project dashboard. Open the SQL Editor and execute the contents of the `supabase/schema.sql` file located in this repository. This will provision the necessary tables (`profiles`, `portfolios`, `alerts`) and enforce Row Level Security policies.
 
 5.  **Initialize the Development Server:**
     ```bash
@@ -73,9 +73,4 @@ The core value of this SaaS is the automated alert system. This is managed via t
 2.  The server verifies the secret. If valid, it fetches the latest spot prices from OilPriceAPI.com.
 3.  The server queries the Supabase `alerts` table for active triggers that match the new price data.
 4.  For every matched alert, the server constructs an HTML email and dispatches it via the Resend API, then updates the database record to prevent duplicate alerts.
-
-## Subscription Tiers
-
-The application logic includes tier-based limitations enforced at the application level:
-* **Free Tier:** Restricted to tracking a maximum of 2 assets and maintaining 1 active price alert.
-* **Paid Tier:** Unlocks unlimited asset tracking and unlimited active price alerts.
+
