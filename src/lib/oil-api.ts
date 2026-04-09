@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizeAssetCode } from "@/lib/assets";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 
@@ -18,19 +19,45 @@ const OilPriceSchema = z.object({
 });
 
 export type OilPriceData = z.infer<typeof OilPriceSchema>["data"];
+const OIL_API_TIMEOUT_MS = 10_000;
 
 export async function fetchOilPrice(assetCode: string = "WTI_USD"): Promise<OilPriceData> {
-  const url = `https://api.oilpriceapi.com/v1/prices/latest?by_code=${assetCode}`;
+  const canonicalAssetCode = normalizeAssetCode(assetCode);
+  const url = `https://api.oilpriceapi.com/v1/prices/latest?by_code=${canonicalAssetCode}`;
+  const apiKey = env.OIL_PRICE_API_KEY;
 
-  logger.info({ assetCode, url }, "Fetching real-time oil price");
+  if (!apiKey) {
+    logger.error("OIL_PRICE_API_KEY is missing");
+    throw new Error("Missing OIL_PRICE_API_KEY");
+  }
 
-  const response = await fetch(url, {
-    method: "GET",
-    headers: {
-      Authorization: `Token ${env.OIL_PRICE_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-  });
+  logger.info({ assetCode: canonicalAssetCode, url }, "Fetching real-time oil price");
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), OIL_API_TIMEOUT_MS);
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      signal: controller.signal,
+    });
+  } catch (error: unknown) {
+    if (error instanceof Error && error.name === "AbortError") {
+      logger.error(
+        { timeoutMs: OIL_API_TIMEOUT_MS, assetCode: canonicalAssetCode },
+        "OilPriceAPI request timed out",
+      );
+      throw new Error(`OilPriceAPI request timed out after ${OIL_API_TIMEOUT_MS}ms`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!response.ok) {
     const errorBody = await response.text();

@@ -51,16 +51,16 @@ graph TD
 ### Directory Architecture
 ```text
 .
-├── src/
-│   ├── app/            # Next.js Routes & API Endpoints
-│   │   ├── api/cron/   # Background workers (Protected by Secrets)
-│   │   └── layout.tsx  # Root UI Shell
-│   ├── lib/            # Shared logic (The "Service Layer")
-│   │   ├── supabase.ts # Client & Admin clients
-│   │   ├── env.ts      # Strict environment validation
-│   │   └── utils.ts    # UI helper utilities
-│   └── components/     # (Placeholder) Atomic UI components
-└── supabase/           # Database migrations and schema definitions
+â”œâ”€â”€ src/
+â”‚   â”œâ”€â”€ app/            # Next.js Routes & API Endpoints
+â”‚   â”‚   â”œâ”€â”€ api/cron/   # Background workers (Protected by Secrets)
+â”‚   â”‚   â””â”€â”€ layout.tsx  # Root UI Shell
+â”‚   â”œâ”€â”€ lib/            # Shared logic (The "Service Layer")
+â”‚   â”‚   â”œâ”€â”€ supabase.ts # Client & Admin clients
+â”‚   â”‚   â”œâ”€â”€ env.ts      # Strict environment validation
+â”‚   â”‚   â””â”€â”€ utils.ts    # UI helper utilities
+â”‚   â””â”€â”€ components/     # (Placeholder) Atomic UI components
+â””â”€â”€ supabase/           # Database migrations and schema definitions
 ```
 
 ---
@@ -156,13 +156,13 @@ erDiagram
 Before committing any change, follow this "Definition of Done":
 
 1. [ ] **Environment Check**: Did I add a new key? Is it in `env.ts`?
-2. [x] **Lint/Format**: Run `pnpm run lint` and `pnpm run format`.
-3. [x] **Test Coverage**: Keep the suite green. Run `pnpm run test:run`.
+2. [x] **Lint/Format**: Run `corepack pnpm run lint` and `corepack pnpm run format`.
+3. [x] **Test Coverage**: Keep the suite green. Run `corepack pnpm run test:run`.
 4. [ ] **Observability Check**: Did I use the structured `logger` for all operational logs?
 5. [ ] **Type Safety**: No `any` types. Ensure interfaces match the `schema.sql`.
 5. [ ] **Database Integrity**: If schema changed, did I update `supabase/schema.sql`?
 6. [ ] **Safety**: Check that `supabaseAdmin` isn't used where a user session exists.
-7. [ ] **Lazy-Check**: Verify lazy getters and run `pnpm run build` for total confirmation.
+7. [ ] **Lazy-Check**: Verify lazy getters and run `corepack pnpm run build` for total confirmation.
 
 ---
 
@@ -171,4 +171,3 @@ Before committing any change, follow this "Definition of Done":
 - **Hybrid Imports**: Ensure you use the `@/*` path alias for `src/` imports to maintain clean directory navigation.
 - **Trigger Latency**: The `handle_new_user` trigger runs on Supabase. If profiles aren't appearing locally, ensure the SQL has been applied to your local or staging DB.
 - **Build Isolation**: Next.js scans the project root for `.ts` files. Always ensure `vitest.config.ts` and `src/**/*.test.ts` are excluded in `tsconfig.json` to prevent dev-dependency resolution errors during a production build.
-

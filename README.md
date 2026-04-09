@@ -51,7 +51,7 @@ To run this project locally, you must establish accounts and obtain API keys for
 
 2.  **Install dependencies:**
     ```bash
-    pnpm install
+    corepack pnpm install
     ```
 
 3.  **Environment Configuration:**
@@ -78,17 +78,17 @@ To run this project locally, you must establish accounts and obtain API keys for
 
 5.  **Initialize the Development Server:**
     ```bash
-    pnpm dev
+    corepack pnpm dev
     ```
 
 6.  **Run Tests**:
     ```bash
-    pnpm test
+    corepack pnpm test
     ```
 
 7.  **Build Verification (Final Check)**:
     ```bash
-    pnpm build
+    corepack pnpm build
     ```
 
 8.  **Access the Application**:
@@ -103,4 +103,4 @@ The core value of this SaaS is the automated alert system. This is managed via t
 2.  The server verifies the secret. If valid, it fetches the latest spot prices from OilPriceAPI.com.
 3.  The server queries the Supabase `alerts` table for active triggers that match the new price data.
 4.  For every matched alert, the server constructs an HTML email and dispatches it via the Resend API, then updates the database record to prevent duplicate alerts.
-
+

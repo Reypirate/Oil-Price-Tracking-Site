@@ -5,6 +5,8 @@ describe("Environment Service (Lazy-Init)", () => {
   // We stub these before tests run to ensure the proxy can resolve them
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://mock-project.supabase.co");
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "mock-anon-key");
+  vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "mock-service-role-key");
+  vi.stubEnv("OIL_PRICE_API_KEY", "mock-oil-api-key");
   vi.stubEnv("CRON_SECRET", "mock-cron-secret");
 
   it("should be defined and accessible", () => {

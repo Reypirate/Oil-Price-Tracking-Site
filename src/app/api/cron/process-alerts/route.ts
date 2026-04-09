@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { processAlerts } from "@/lib/alerts";
+import { normalizeAssetCode } from "@/lib/assets";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { fetchOilPrice } from "@/lib/oil-api";
@@ -18,7 +19,7 @@ export async function GET(request: Request) {
 
   try {
     // 2. Fetch Price from Service Layer
-    const currentPriceData = await fetchOilPrice("WTI_USD");
+    const currentPriceData = await fetchOilPrice(normalizeAssetCode("WTI"));
 
     // 3. Process Alerts using the Price Data
     const result = await processAlerts(currentPriceData);
@@ -29,7 +30,7 @@ export async function GET(request: Request) {
       timestamp: new Date().toISOString(),
       details: result,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error({ err: error }, "Cron Error");
     return NextResponse.json({ success: false, error: "Internal Server Error" }, { status: 500 });
   }
