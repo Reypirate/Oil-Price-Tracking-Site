@@ -1,21 +1,39 @@
-import { createClient } from "@supabase/supabase-js";
-
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { env } from "./env";
 
-// Standard client for client-side and row-level security
-export const supabase = createClient(
-  env.NEXT_PUBLIC_SUPABASE_URL,
-  env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-);
+let supabaseInstance: SupabaseClient | undefined;
+let supabaseAdminInstance: SupabaseClient | undefined;
 
-// Admin client for background processes (bypasses RLS)
-export const supabaseAdmin = createClient(
-  env.NEXT_PUBLIC_SUPABASE_URL,
-  env.SUPABASE_SERVICE_ROLE_KEY,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  },
-);
+/**
+ * Standard client for client-side and row-level security.
+ * Memoized to ensure only one instance is created per request/session.
+ */
+export const getSupabase = () => {
+  if (!supabaseInstance) {
+    supabaseInstance = createClient(
+      env.NEXT_PUBLIC_SUPABASE_URL,
+      env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    );
+  }
+  return supabaseInstance;
+};
+
+/**
+ * Admin client for background processes (bypasses RLS).
+ * Memoized to ensure only one instance is created per request/session.
+ */
+export const getSupabaseAdmin = () => {
+  if (!supabaseAdminInstance) {
+    supabaseAdminInstance = createClient(
+      env.NEXT_PUBLIC_SUPABASE_URL,
+      env.SUPABASE_SERVICE_ROLE_KEY,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      },
+    );
+  }
+  return supabaseAdminInstance;
+};

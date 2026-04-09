@@ -1,26 +1,32 @@
 import { NextResponse } from "next/server";
+import { processAlerts } from "@/lib/alerts";
 import { env } from "@/lib/env";
-import { supabaseAdmin } from "@/lib/supabase";
+import { fetchOilPrice } from "@/lib/oil-api";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
 
   // 1. Verify Cron Secret
   if (authHeader !== `Bearer ${env.CRON_SECRET}`) {
-    return new Response("Unauthorized", { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    // 2. Placeholder for Price Fetching
-    // const currentPrice = await fetchOilPrice();
+    // 2. Fetch Price from Service Layer
+    const currentPriceData = await fetchOilPrice("WTI");
 
-    // 3. Placeholder for Alert Processing
-    // const triggeredAlerts = await processAlerts(currentPrice);
+    // 3. Process Alerts using the Price Data
+    const result = await processAlerts(currentPriceData);
 
     return NextResponse.json({
       success: true,
       message: "Cron job processed successfully",
       timestamp: new Date().toISOString(),
+      details: result,
     });
   } catch (error) {
     console.error("Cron Error:", error);

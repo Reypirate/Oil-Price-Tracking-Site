@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-export function middleware(request: NextRequest) {
+export function middleware(_request: NextRequest) {
   // Add authentication or route protection logic here
   // For now, this is a placeholder that allows all requests
   return NextResponse.next();

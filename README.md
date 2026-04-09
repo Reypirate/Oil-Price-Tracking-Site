@@ -2,17 +2,30 @@
 
 A comprehensive, automated web application for tracking global commodity prices. This platform provides real-time data visualization, personalized user portfolios, and an automated background engine that dispatches email alerts based on custom price thresholds.
 
-## Application Architecture
+## Built With
 
-This project utilizes a modern, serverless stack optimized for performance, scalability, and minimal initial overhead.
+[![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Bun](https://img.shields.io/badge/Bun-000000?style=for-the-badge&logo=bun&logoColor=white)](https://bun.sh/)
 
-* **Frontend:** Next.js (App Router) utilizing Server Components for optimal initial load times and SEO.
-* **Styling & Typography:** Tailwind CSS, utilizing Inter for the primary interface and Playfair Display for prominent data points and headers.
-* **Data Visualization:** Recharts for rendering interactive, time-series data of commodity prices.
-* **Database & Authentication:** Supabase. Handles PostgreSQL data storage, user session management, and Row Level Security (RLS) to ensure data isolation between tenants.
-* **Background Processing:** Vercel Cron. Triggers secure API routes on a schedule to process data and evaluate user alerts without requiring active user sessions.
-* **Transactional Email:** Resend, paired with React Email for constructing responsive notification templates.
-* **Market Data:** OilPriceAPI.com serving as the primary oracle for real-time and historical commodity pricing.
+### Primary Stack
+- **Framework:** Next.js (App Router) with React Canary
+- **Database & Auth:** [Supabase](https://supabase.com/) (PostgreSQL + RLS)
+- **Infrastructure:** [Vercel Cron](https://vercel.com/docs/cron-jobs) for automated background tasks
+- **Data Oracle:** [OilPriceAPI.com](https://oilpriceapi.com/) for real-time commodity data
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/) + Lucide Icons
+- **Visuals:** [Recharts](https://recharts.org/) for price analytics
+- **Communication:** [Resend](https://resend.com/) for transactional alerts
+- **Reliability:** [Zod](https://zod.dev/) for type-safe validation
+
+### Developer Experience (DX)
+- **Runtime:** [Bun](https://bun.sh/) for optimized execution
+- **Linting & Formatting:** [Biome](https://biomejs.dev/) + [Oxlint](https://oxlint.dev/)
+- **Workflow:** [Husky](https://typicode.github.io/husky/) + [Lint-staged](https://github.com/lint-staged/lint-staged)
+
 
 ## System Requirements and Setup
 

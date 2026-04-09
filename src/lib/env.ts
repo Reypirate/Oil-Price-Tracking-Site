@@ -18,14 +18,46 @@ const processEnv = {
   CRON_SECRET: process.env.CRON_SECRET,
 };
 
-const parsed = envSchema.safeParse(processEnv);
+// 1. Define a helper to get validated env
+let memoizedEnv: z.infer<typeof envSchema> | undefined;
 
-if (!parsed.success) {
-  console.error(
-    "❌ Invalid environment variables:",
-    JSON.stringify(parsed.error.format(), null, 2),
-  );
-  throw new Error("Invalid environment variables");
-}
+const getEnv = () => {
+  if (memoizedEnv) return memoizedEnv;
 
-export const env = parsed.data;
+  const parsed = envSchema.safeParse(processEnv);
+
+  if (!parsed.success) {
+    const isProduction = process.env.NODE_ENV === "production";
+    const isBuild =
+      process.env.NEXT_PHASE === "phase-production-build" ||
+      process.env.SKIP_ENV_VALIDATION === "true";
+
+    // 1. If we are BUILDING, never crash. Just return raw env (even if partial).
+    if (isBuild) {
+      return processEnv as unknown as z.infer<typeof envSchema>;
+    }
+
+    // 2. If we are in PRODUCTION RUNTIME, we must be strict.
+    if (isProduction) {
+      console.error(
+        "❌ MISSION CRITICAL: Invalid environment variables in Production:",
+        JSON.stringify(parsed.error.format(), null, 2),
+      );
+      throw new Error("Environment validation failed. App cannot start.");
+    }
+
+    // 3. If we are in DEV, just warn so the developer can keep working.
+    console.warn("⚠️ [Env] Missing/invalid variables. Check your .env.local.");
+    return processEnv as unknown as z.infer<typeof envSchema>;
+  }
+
+  memoizedEnv = parsed.data;
+  return memoizedEnv;
+};
+
+// 2. Export a lazy-validated proxy
+export const env = new Proxy({} as z.infer<typeof envSchema>, {
+  get(_, prop: string) {
+    return getEnv()[prop as keyof z.infer<typeof envSchema>];
+  },
+});
