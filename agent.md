@@ -155,7 +155,7 @@ Before committing any change, follow this "Definition of Done":
 4. [ ] **Type Safety**: No `any` types. Ensure interfaces match the `schema.sql`.
 5. [ ] **Database Integrity**: If schema changed, did I update `supabase/schema.sql`?
 6. [ ] **Safety**: Check that `supabaseAdmin` isn't used where a user session exists.
-7. [ ] **Lazy-Check**: Did I ensure no top-level side effects exist for build-safety?
+7. [ ] **Lazy-Check**: Verify lazy getters and run `pnpm run build` for total confirmation.
 
 ---
 
@@ -163,4 +163,5 @@ Before committing any change, follow this "Definition of Done":
 - **Package Management**: This project uses `pnpm-lock.yaml`. Do not run `npm install` or `bun install`. Always use `pnpm` to ensure strict dependency resolution.
 - **Hybrid Imports**: Ensure you use the `@/*` path alias for `src/` imports to maintain clean directory navigation.
 - **Trigger Latency**: The `handle_new_user` trigger runs on Supabase. If profiles aren't appearing locally, ensure the SQL has been applied to your local or staging DB.
+- **Build Isolation**: Next.js scans the project root for `.ts` files. Always ensure `vitest.config.ts` and `src/**/*.test.ts` are excluded in `tsconfig.json` to prevent dev-dependency resolution errors during a production build.
 

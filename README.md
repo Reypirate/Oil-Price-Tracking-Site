@@ -80,12 +80,17 @@ To run this project locally, you must establish accounts and obtain API keys for
     pnpm dev
     ```
 
-6.  **Run Tests:**
+6.  **Run Tests**:
     ```bash
     pnpm test
     ```
 
-7.  **Access the Application:**
+7.  **Build Verification (Final Check)**:
+    ```bash
+    pnpm build
+    ```
+
+8.  **Access the Application**:
     Open your browser and navigate to `http://localhost:3000`.
 
 ## Automated Alert Engine (Cron)
