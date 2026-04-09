@@ -22,6 +22,13 @@ A comprehensive, automated web application for tracking global commodity prices.
 - **Communication:** [Resend](https://resend.com/) for transactional alerts
 - **Reliability:** [Zod](https://zod.dev/) for type-safe validation
 
+### Architecture: Model-View-Controller (MVC)
+This project adheres to a strict MVC pattern adapted for Next.js App Router to ensure maintainability and readability:
+
+*   **Model (`src/lib`)**: Contains the "Ground Truth" of the application. This includes Supabase schemas, Zod validation, and the **Intelligence Engine** (ML logic, Sentiment Analysis).
+*   **View (`src/components` & `src/app`)**: Responsible for the "Oceanic Depth" UI. Components are kept "dumb" and focused only on data presentation and user interaction.
+*   **Controller (`src/app/api` & Server Actions)**: Acts as the glue between Model and View. Manages data orchestration, external API calls, and business logic execution.
+
 ### Developer Experience (DX)
 - **Package Manager:** [pnpm](https://pnpm.io/) (Strict dependency isolation)
 - **Runtime:** Node.js (v20+)

@@ -139,7 +139,14 @@ erDiagram
 - **Reason**: This ensures that modules can be imported during the Next.js build-phase static analysis without causing premature side-effects or crashing the compiler due to missing secrets.
 - **Example**: See [`src/lib/supabase.ts`](file:///c:/Users/johnr/Downloads/Oil-Price-Tracking-Site/src/lib/supabase.ts).
 
-### 8. Testing-First Culture
+### 8. MVC Pattern Mandate
+All future features must adhere to the **Model-View-Controller** separation:
+- **Model**: `src/lib/<feature>.ts` (Business logic, mathematical models).
+- **View**: `src/components/<feature>.tsx` (UI representation).
+- **Controller**: `src/app/<route>/page.tsx` or Server Actions (Data flow).
+- **Reason**: Prevents "God Components" and ensures the Intelligence Engine remains testable without UI overhead.
+
+### 9. Testing-First Culture
 - Every core utility in `src/lib` must have a corresponding `.test.ts` file.
 - Before introducing new logic, ensure the environment is stubbed correctly using `vi.stubEnv` to prevent Zod validation failures during tests.
 

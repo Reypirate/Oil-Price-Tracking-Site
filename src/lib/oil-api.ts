@@ -14,7 +14,19 @@ const OilPriceSchema = z.object({
     price: z.number(),
     currency: z.string(),
     code: z.string(),
-    timestamp: z.string(),
+    created_at: z.string().optional(),
+    updated_at: z.string().optional(),
+    changes: z
+      .object({
+        "24h": z
+          .object({
+            amount: z.number().optional(),
+            percent: z.number().optional(),
+            previous_price: z.number().optional(),
+          })
+          .optional(),
+      })
+      .optional(),
   }),
 });
 

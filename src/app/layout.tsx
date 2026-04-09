@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
-
 export const metadata: Metadata = {
-  title: "Oil Price Tracker",
-  description: "Automated oil price tracking and alerts",
+  title: "OilPrice Intelligence — Live Crude Oil Analytics",
+  description:
+    "Real-time WTI crude oil price tracking with linear regression forecasting, NLP-driven sentiment analysis, and regional price comparisons for Singapore (SGD) and Philippines (PHP).",
 };
 
 export default function RootLayout({
@@ -16,7 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body>{children}</body>
     </html>
   );
 }
