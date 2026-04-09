@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { logger } from "./logger";
 import type { OilPriceData } from "./oil-api";
 
 /**
@@ -7,7 +8,7 @@ import type { OilPriceData } from "./oil-api";
  */
 
 export async function processAlerts(priceData: OilPriceData) {
-  console.log(`Processing alerts for ${priceData.code} at price ${priceData.price}...`);
+  logger.info({ asset: priceData.code, price: priceData.price }, "Processing alerts");
 
   const supabaseAdmin = getSupabaseAdmin();
 
@@ -34,7 +35,26 @@ export async function processAlerts(priceData: OilPriceData) {
   });
 
   // 3. (Optional) Dispatch notifications via Resend
+  // TODO: Implement Resend integration
+
   // 4. Update triggered_at in the database for the matched alerts
+  if (triggeredAlerts.length > 0) {
+    const triggeredIds = triggeredAlerts.map((alert) => alert.id);
+
+    logger.info({ triggeredIds }, "Persisting triggered alerts to database");
+
+    const { error: updateError } = await supabaseAdmin
+      .from("alerts")
+      .update({ triggered_at: new Date().toISOString() })
+      .in("id", triggeredIds);
+
+    if (updateError) {
+      logger.error({ err: updateError }, "Failed to update triggered alerts");
+      throw new Error(`Persistence Error: ${updateError.message}`);
+    }
+
+    logger.info({ count: triggeredIds.length }, "Successfully updated alert persistence state");
+  }
 
   return {
     scanned: alerts.length,

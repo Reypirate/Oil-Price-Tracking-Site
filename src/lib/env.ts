@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { logger } from "./logger";
 
 const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
@@ -38,15 +39,15 @@ const getEnv = () => {
 
     // 2. If we are in PRODUCTION RUNTIME, we must be strict.
     if (isProduction) {
-      console.error(
-        "❌ MISSION CRITICAL: Invalid environment variables in Production:",
-        JSON.stringify(parsed.error.format(), null, 2),
+      logger.error(
+        { errors: parsed.error.format() },
+        "❌ MISSION CRITICAL: Invalid environment variables in Production",
       );
       throw new Error("Environment validation failed. App cannot start.");
     }
 
     // 3. If we are in DEV, just warn so the developer can keep working.
-    console.warn("⚠️ [Env] Missing/invalid variables. Check your .env.local.");
+    logger.warn("⚠️ [Env] Missing/invalid variables. Check your .env.local.");
     return processEnv as unknown as z.infer<typeof envSchema>;
   }
 

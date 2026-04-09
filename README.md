@@ -26,6 +26,7 @@ A comprehensive, automated web application for tracking global commodity prices.
 - **Package Manager:** [pnpm](https://pnpm.io/) (Strict dependency isolation)
 - **Runtime:** Node.js (v20+)
 - **Testing:** [Vitest](https://vitest.dev/) + [JSDOM](https://github.com/jsdom/jsdom)
+- **Logging:** [Pino](https://getpino.io/) (High-performance structured logging)
 - **Linting & Formatting:** [Biome](https://biomejs.dev/) + [Oxlint](https://oxlint.dev/)
 - **Workflow:** [Husky](https://typicode.github.io/husky/) + [Lint-staged](https://github.com/lint-staged/lint-staged)
 

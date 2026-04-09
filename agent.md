@@ -143,6 +143,12 @@ erDiagram
 - Every core utility in `src/lib` must have a corresponding `.test.ts` file.
 - Before introducing new logic, ensure the environment is stubbed correctly using `vi.stubEnv` to prevent Zod validation failures during tests.
 
+### 9. Structured Logging (Observability)
+- **Mandate**: Use the global `logger` from `@/lib/logger` instead of `console.log` or `console.error`.
+- **Reason**: Structured logging (NDJSON) is essential for production observability (e.g., Datadog, Axiom).
+- **Pattern**: Provide metadata objects as the first argument: `logger.info({ userId: '123' }, 'User logged in')`.
+- **Custom Serializers**: Use the built-in `supabaseError` serializer for Postgres errors to ensure they are captured with full context.
+
 ---
 
 ## Agent Workflow Checklist
@@ -150,9 +156,10 @@ erDiagram
 Before committing any change, follow this "Definition of Done":
 
 1. [ ] **Environment Check**: Did I add a new key? Is it in `env.ts`?
-2. [ ] **Lint/Format**: Run `pnpm run lint` and `pnpm run format`.
-3. [ ] **Test Coverage**: Keep the suite green. Run `pnpm run test:run`.
-4. [ ] **Type Safety**: No `any` types. Ensure interfaces match the `schema.sql`.
+2. [x] **Lint/Format**: Run `pnpm run lint` and `pnpm run format`.
+3. [x] **Test Coverage**: Keep the suite green. Run `pnpm run test:run`.
+4. [ ] **Observability Check**: Did I use the structured `logger` for all operational logs?
+5. [ ] **Type Safety**: No `any` types. Ensure interfaces match the `schema.sql`.
 5. [ ] **Database Integrity**: If schema changed, did I update `supabase/schema.sql`?
 6. [ ] **Safety**: Check that `supabaseAdmin` isn't used where a user session exists.
 7. [ ] **Lazy-Check**: Verify lazy getters and run `pnpm run build` for total confirmation.
