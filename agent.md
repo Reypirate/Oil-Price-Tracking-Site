@@ -41,8 +41,9 @@ graph TD
 | Tier | Tool | Rationale |
 | :--- | :--- | :--- |
 | **Runtime** | [Bun](https://bun.sh/) or [Node.js](https://nodejs.org/) | Performance, server-side scaling, and modern TypeScript support. |
-| **Package Manager** | [pnpm](https://pnpm.io/) | Fast, disk-efficient, and strict dependency management (Industry Standard for reliability). |
+| **Package Manager** | [pnpm](https://pnpm.io/) | Fast, disk-efficient, and strict dependency management (Strictly Mandated). |
 | **Framework** | Next.js 15 (App Router) | Server-side rendering (RSC) and serverless function integration. |
+| **Testing** | [Vitest](https://vitest.dev/) | High-performance testing with native ESM support and JSDOM. |
 | **Auth/DB** | Supabase | Managed PostgreSQL, Row Level Security (RLS) for data isolation. |
 | **DX** | Biome + Oxlint | 100x faster than Prettier/ESLint; unified linting and formatting. |
 | **Validation** | Zod | Runtime schema validation for environments and external API data. |
@@ -133,6 +134,15 @@ erDiagram
 - Depend on abstractions, not concretions. 
 - Use the service layer in `src/lib` to abstract external integrations (like Supabase or OilPriceAPI), making it easier to mock or swap dependencies during testing.
 
+### 7. Lazy Initialization Pattern
+- **Mandate**: All environmental and external service initializations (e.g., `createClient`) must be wrapped in a **Lazy Getter** or exported via a **Proxy**.
+- **Reason**: This ensures that modules can be imported during the Next.js build-phase static analysis without causing premature side-effects or crashing the compiler due to missing secrets.
+- **Example**: See [`src/lib/supabase.ts`](file:///c:/Users/johnr/Downloads/Oil-Price-Tracking-Site/src/lib/supabase.ts).
+
+### 8. Testing-First Culture
+- Every core utility in `src/lib` must have a corresponding `.test.ts` file.
+- Before introducing new logic, ensure the environment is stubbed correctly using `vi.stubEnv` to prevent Zod validation failures during tests.
+
 ---
 
 ## Agent Workflow Checklist
@@ -140,10 +150,12 @@ erDiagram
 Before committing any change, follow this "Definition of Done":
 
 1. [ ] **Environment Check**: Did I add a new key? Is it in `env.ts`?
-2. [ ] **Lint/Format**: Run `bun run lint` and `bun run format`.
-3. [ ] **Type Safety**: No `any` types. Ensure interfaces match the `schema.sql`.
-4. [ ] **Database Integrity**: If schema changed, did I update `supabase/schema.sql`?
-5. [ ] **Safety**: Check that `supabaseAdmin` isn't used where a user session exists.
+2. [ ] **Lint/Format**: Run `pnpm run lint` and `pnpm run format`.
+3. [ ] **Test Coverage**: Keep the suite green. Run `pnpm run test:run`.
+4. [ ] **Type Safety**: No `any` types. Ensure interfaces match the `schema.sql`.
+5. [ ] **Database Integrity**: If schema changed, did I update `supabase/schema.sql`?
+6. [ ] **Safety**: Check that `supabaseAdmin` isn't used where a user session exists.
+7. [ ] **Lazy-Check**: Did I ensure no top-level side effects exist for build-safety?
 
 ---
 

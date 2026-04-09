@@ -9,7 +9,8 @@ A comprehensive, automated web application for tracking global commodity prices.
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Bun](https://img.shields.io/badge/Bun-000000?style=for-the-badge&logo=bun&logoColor=white)](https://bun.sh/)
+[![pnpm](https://img.shields.io/badge/pnpm-F69220?style=for-the-badge&logo=pnpm&logoColor=white)](https://pnpm.io/)
+[![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=for-the-badge&logo=vitest&logoColor=white)](https://vitest.dev/)
 
 ### Primary Stack
 - **Framework:** Next.js (App Router) with React Canary
@@ -22,7 +23,9 @@ A comprehensive, automated web application for tracking global commodity prices.
 - **Reliability:** [Zod](https://zod.dev/) for type-safe validation
 
 ### Developer Experience (DX)
-- **Runtime:** [Bun](https://bun.sh/) for optimized execution
+- **Package Manager:** [pnpm](https://pnpm.io/) (Strict dependency isolation)
+- **Runtime:** Node.js (v20+)
+- **Testing:** [Vitest](https://vitest.dev/) + [JSDOM](https://github.com/jsdom/jsdom)
 - **Linting & Formatting:** [Biome](https://biomejs.dev/) + [Oxlint](https://oxlint.dev/)
 - **Workflow:** [Husky](https://typicode.github.io/husky/) + [Lint-staged](https://github.com/lint-staged/lint-staged)
 
@@ -47,11 +50,14 @@ To run this project locally, you must establish accounts and obtain API keys for
 
 2.  **Install dependencies:**
     ```bash
-    npm install
+    pnpm install
     ```
 
 3.  **Environment Configuration:**
-    Create a `.env.local` file in the root directory. Populate it with your specific service credentials:
+    Copy the example environment file and populate it:
+    ```bash
+    cp .env.example .env.local
+    ```
     ```env
     # Supabase Configuration
     NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
@@ -71,10 +77,15 @@ To run this project locally, you must establish accounts and obtain API keys for
 
 5.  **Initialize the Development Server:**
     ```bash
-    npm run dev
+    pnpm dev
     ```
 
-6.  **Access the Application:**
+6.  **Run Tests:**
+    ```bash
+    pnpm test
+    ```
+
+7.  **Access the Application:**
     Open your browser and navigate to `http://localhost:3000`.
 
 ## Automated Alert Engine (Cron)

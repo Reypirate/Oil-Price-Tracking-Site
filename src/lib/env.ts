@@ -9,20 +9,19 @@ const envSchema = z.object({
   CRON_SECRET: z.string().min(1),
 });
 
-const processEnv = {
-  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
-  OIL_PRICE_API_KEY: process.env.OIL_PRICE_API_KEY,
-  RESEND_API_KEY: process.env.RESEND_API_KEY,
-  CRON_SECRET: process.env.CRON_SECRET,
-};
-
-// 1. Define a helper to get validated env
 let memoizedEnv: z.infer<typeof envSchema> | undefined;
 
 const getEnv = () => {
   if (memoizedEnv) return memoizedEnv;
+
+  const processEnv = {
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    OIL_PRICE_API_KEY: process.env.OIL_PRICE_API_KEY,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    CRON_SECRET: process.env.CRON_SECRET,
+  };
 
   const parsed = envSchema.safeParse(processEnv);
 
