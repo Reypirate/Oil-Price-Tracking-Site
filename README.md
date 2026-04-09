@@ -19,7 +19,7 @@ A comprehensive, automated web application for tracking global commodity prices.
 - **Data Oracle:** [OilPriceAPI.com](https://oilpriceapi.com/) for real-time commodity data
 - **Styling:** [Tailwind CSS](https://tailwindcss.com/) + Lucide Icons
 - **Visuals:** [Recharts](https://recharts.org/) for price analytics
-- **Communication:** [Resend](https://resend.com/) for transactional alerts
+- **Communication:** [Resend](https://resend.com/) for production transactional alerts, [Maildev](https://github.com/maildev/maildev) for local testing
 - **Reliability:** [Zod](https://zod.dev/) for type-safe validation
 
 ### Architecture: Model-View-Controller (MVC)
@@ -44,9 +44,12 @@ This project adheres to a strict MVC pattern adapted for Next.js App Router to e
 
 To run this project locally, you must establish accounts and obtain API keys for the following services:
 * Supabase (Project URL and Anon Key)
-* Resend (API Key)
 * OilPriceAPI.com (API Key)
 * Vercel (For deployment and Cron setup)
+
+Optional for email delivery:
+* Resend (API Key, production mode)
+* Maildev (local SMTP inbox, no API key)
 
 ### Local Development Installation
 
@@ -74,31 +77,47 @@ To run this project locally, you must establish accounts and obtain API keys for
     
     # External API Integrations
     OIL_PRICE_API_KEY=your_oilpriceapi_key
+
+    # Email Delivery (local default: Maildev)
+    MAIL_MODE=maildev
+    MAILDEV_HOST=127.0.0.1
+    MAILDEV_PORT=1025
+    ALERT_FROM_EMAIL=alerts@local.test
     RESEND_API_KEY=your_resend_api_key
+
+    # Optional Rate Limiting (Upstash Redis)
+    UPSTASH_REDIS_REST_URL=your_upstash_redis_rest_url
+    UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_rest_token
     
     # Internal Security
     CRON_SECRET=generate_a_secure_random_string
     ```
 
-4.  **Database Initialization:**
+4.  **Optional: Start Maildev for local email testing**
+    ```bash
+    corepack pnpm dlx maildev --smtp 1025 --web 1080
+    ```
+    Open `http://localhost:1080` to inspect sent alert emails.
+
+5.  **Database Initialization:**
     Navigate to your Supabase project dashboard. Open the SQL Editor and execute the contents of the `supabase/schema.sql` file located in this repository. This will provision the necessary tables (`profiles`, `portfolios`, `alerts`) and enforce Row Level Security policies.
 
-5.  **Initialize the Development Server:**
+6.  **Initialize the Development Server:**
     ```bash
     corepack pnpm dev
     ```
 
-6.  **Run Tests**:
+7.  **Run Tests**:
     ```bash
     corepack pnpm test
     ```
 
-7.  **Build Verification (Final Check)**:
+8.  **Build Verification (Final Check)**:
     ```bash
     corepack pnpm build
     ```
 
-8.  **Access the Application**:
+9.  **Access the Application**:
     Open your browser and navigate to `http://localhost:3000`.
 
 ## Automated Alert Engine (Cron)
@@ -109,5 +128,5 @@ The core value of this SaaS is the automated alert system. This is managed via t
 1.  Vercel Cron issues a GET request to the endpoint, passing the `CRON_SECRET` in the Authorization header.
 2.  The server verifies the secret. If valid, it fetches the latest spot prices from OilPriceAPI.com.
 3.  The server queries the Supabase `alerts` table for active triggers that match the new price data.
-4.  For every matched alert, the server constructs an HTML email and dispatches it via the Resend API, then updates the database record to prevent duplicate alerts.
+4.  For every matched alert, the server constructs an HTML email and dispatches it via the configured mail provider (`MAIL_MODE=maildev` or `MAIL_MODE=resend`), then updates the database record to prevent duplicate alerts.
 

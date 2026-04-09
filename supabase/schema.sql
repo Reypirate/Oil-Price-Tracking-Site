@@ -29,6 +29,59 @@ CREATE TABLE alerts (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 3a. Atomic alert trigger function for cron processing
+CREATE OR REPLACE FUNCTION public.trigger_matching_alerts(
+  p_asset_code TEXT,
+  p_price NUMERIC
+)
+RETURNS TABLE(
+  id UUID,
+  user_id UUID,
+  asset_code TEXT,
+  condition TEXT,
+  threshold_price DECIMAL(18, 4),
+  email TEXT
+)
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  WITH updated AS (
+    UPDATE alerts
+    SET
+      triggered_at = timezone('utc', now()),
+      is_active = FALSE
+    WHERE asset_code = p_asset_code
+      AND is_active = TRUE
+      AND triggered_at IS NULL
+      AND (
+        (condition = 'above' AND threshold_price <= p_price)
+        OR (condition = 'below' AND threshold_price >= p_price)
+      )
+    RETURNING
+      alerts.id,
+      alerts.user_id,
+      alerts.asset_code,
+      alerts.condition,
+      alerts.threshold_price
+  )
+  SELECT
+    updated.id,
+    updated.user_id,
+    updated.asset_code,
+    updated.condition,
+    updated.threshold_price,
+    profiles.email
+  FROM updated
+  LEFT JOIN profiles ON profiles.id = updated.user_id;
+$$;
+
+-- Restrict execution of privileged RPC to service role only
+REVOKE ALL ON FUNCTION public.trigger_matching_alerts(TEXT, NUMERIC) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.trigger_matching_alerts(TEXT, NUMERIC) FROM anon;
+REVOKE ALL ON FUNCTION public.trigger_matching_alerts(TEXT, NUMERIC) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.trigger_matching_alerts(TEXT, NUMERIC) TO service_role;
+
 -- 3b. Backfill legacy WTI code to canonical value
 UPDATE portfolios
 SET asset_code = 'WTI_USD'

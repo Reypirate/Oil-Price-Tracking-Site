@@ -7,6 +7,8 @@ describe("Environment Service (Lazy-Init)", () => {
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "mock-anon-key");
   vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "mock-service-role-key");
   vi.stubEnv("OIL_PRICE_API_KEY", "mock-oil-api-key");
+  vi.stubEnv("UPSTASH_REDIS_REST_URL", "https://upstash.example.com");
+  vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "mock-upstash-token");
   vi.stubEnv("CRON_SECRET", "mock-cron-secret");
 
   it("should be defined and accessible", () => {
