@@ -3,35 +3,15 @@
 import { BarChart3, Bell, Droplets, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { type DashboardSnapshot, fetchDashboardSnapshot } from "@/lib/dashboard-client";
+import { AlertsPanel } from "./AlertsPanel";
 import { DieselComparison } from "./DieselComparison";
 import { HistoricalChart } from "./HistoricalChart";
 import { IntelligencePanel } from "./IntelligencePanel";
 import { PriceTicker } from "./PriceTicker";
 
 /* ─── Types ─── */
-interface DashboardData {
-  price: {
-    usd: number;
-    sgd: number;
-    php: number;
-    change24h: number;
-    changeAmount: number;
-  };
-  diesel: {
-    usdPerGallon: number;
-    sgdPerLiter: number;
-    phpPerLiter: number;
-    change24h: number;
-  };
-  intelligence: {
-    forecast: number;
-    trend: "BULLISH" | "BEARISH" | "STAGNANT";
-    mood: "OPTIMISTIC" | "NEUTRAL" | "CONCERNED";
-    sentimentScore: number;
-    keywords: string[];
-  };
-  history: Array<{ date: string; price: number }>;
-}
+type DashboardData = DashboardSnapshot;
 
 /* ─── Loading Skeleton ─── */
 function DashboardSkeleton() {
@@ -88,11 +68,8 @@ export function Dashboard() {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/dashboard");
-      if (!res.ok) throw new Error(`Server responded with ${res.status}`);
-      const json = await res.json();
-      if (json.error) throw new Error(json.error);
-      setData(json);
+      const snapshot = await fetchDashboardSnapshot();
+      setData(snapshot);
       setLastUpdated(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
@@ -130,23 +107,20 @@ export function Dashboard() {
 
           {/* Nav Links */}
           <nav className="hidden md:flex items-center gap-1">
-            {[
-              { label: "Dashboard", icon: BarChart3, active: true },
-              { label: "Alerts", icon: Bell, active: false },
-            ].map(({ label, icon: Icon, active }) => (
-              <Link
-                key={label}
-                href="/"
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold tracking-[0.08em] uppercase transition-all duration-200 ${
-                  active
-                    ? "bg-[#22D3EE]/10 text-[#22D3EE]"
-                    : "text-[#64748B] hover:text-[#94A3B8] hover:bg-white/[0.04]"
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                {label}
-              </Link>
-            ))}
+            <Link
+              href="/"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold tracking-[0.08em] uppercase transition-all duration-200 bg-[#22D3EE]/10 text-[#22D3EE]"
+            >
+              <BarChart3 className="w-3.5 h-3.5" />
+              Dashboard
+            </Link>
+            <Link
+              href="#alerts-section"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold tracking-[0.08em] uppercase transition-all duration-200 text-[#64748B] hover:text-[#94A3B8] hover:bg-white/[0.04]"
+            >
+              <Bell className="w-3.5 h-3.5" />
+              Alerts
+            </Link>
           </nav>
 
           {/* Right side */}
@@ -233,6 +207,8 @@ export function Dashboard() {
                 <HistoricalChart data={data.history} prediction={data.intelligence.forecast} />
               </div>
             </div>
+
+            <AlertsPanel currentPrice={data.price.usd} />
           </div>
         )}
       </main>
