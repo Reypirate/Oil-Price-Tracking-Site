@@ -1,4 +1,7 @@
+import { getSupabase } from "@/lib/supabase";
+
 export type AlertCondition = "above" | "below";
+export type MailDeliveryMode = "maildev" | "resend";
 
 export type AlertRecord = {
   assetCode: string;
@@ -23,6 +26,7 @@ type TestAlertEmailData = {
   result: {
     assetCode: string;
     currentPrice: number;
+    deliveryMode: MailDeliveryMode;
     recipientEmail: string;
     thresholdPrice: number;
   };
@@ -42,8 +46,28 @@ function toErrorMessage(payload: ApiResponse<unknown>, fallbackMessage: string):
   return fallbackMessage;
 }
 
+async function buildAuthHeaders(contentType = false): Promise<Record<string, string>> {
+  const headers: Record<string, string> = {};
+
+  if (contentType) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  const { data } = await getSupabase().auth.getSession();
+  const accessToken = data.session?.access_token;
+
+  if (accessToken) {
+    headers.Authorization = `Bearer ${accessToken}`;
+  }
+
+  return headers;
+}
+
 export async function fetchAlerts(): Promise<AlertsListData> {
-  const response = await fetch("/api/alerts", { cache: "no-store" });
+  const response = await fetch("/api/alerts", {
+    cache: "no-store",
+    headers: await buildAuthHeaders(),
+  });
   const payload = (await response.json()) as ApiResponse<AlertsListData>;
 
   if (!response.ok || !payload.success || !payload.data) {
@@ -61,9 +85,7 @@ export async function createAlert(payload: {
 }): Promise<AlertRecord> {
   const response = await fetch("/api/alerts", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: await buildAuthHeaders(true),
     body: JSON.stringify(payload),
   });
 
@@ -81,9 +103,7 @@ export async function updateAlert(
 ): Promise<AlertRecord> {
   const response = await fetch(`/api/alerts/${alertId}`, {
     method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: await buildAuthHeaders(true),
     body: JSON.stringify(payload),
   });
 
@@ -98,13 +118,12 @@ export async function updateAlert(
 export async function sendTestAlertEmail(payload: {
   assetCode?: string;
   currentPrice: number;
+  deliveryMode?: MailDeliveryMode;
   recipientEmail?: string;
 }) {
   const response = await fetch("/api/alerts/test-email", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: await buildAuthHeaders(true),
     body: JSON.stringify(payload),
   });
 

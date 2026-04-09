@@ -43,7 +43,6 @@ export type DashboardSnapshot = {
   diesel: {
     change24h: number;
     phpPerLiter: number;
-    sgdPerLiter: number;
     usdPerGallon: number;
   };
   history: HistoryPoint[];
@@ -58,7 +57,6 @@ export type DashboardSnapshot = {
     change24h: number;
     changeAmount: number;
     php: number;
-    sgd: number;
     usd: number;
   };
 };
@@ -84,14 +82,12 @@ export async function buildDashboardSnapshot(
   return {
     price: {
       usd: wtiData.price,
-      sgd: deps.getRegionalPrice(wtiData.price, "SG"),
       php: deps.getRegionalPrice(wtiData.price, "PH"),
       change24h: wtiData.changes?.["24h"]?.percent ?? 0,
       changeAmount: wtiData.changes?.["24h"]?.amount ?? 0,
     },
     diesel: {
       usdPerGallon: dieselData.price,
-      sgdPerLiter: deps.getDieselPerLiter(dieselData.price, "SG"),
       phpPerLiter: deps.getDieselPerLiter(dieselData.price, "PH"),
       change24h: dieselData.changes?.["24h"]?.percent ?? 0,
     },

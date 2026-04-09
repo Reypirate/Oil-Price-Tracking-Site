@@ -6,6 +6,7 @@ import {
   createPrimaryProfileAlert,
   listPrimaryProfileAlerts,
 } from "@/lib/alerts-center";
+import { ApiAuthError, requireSupabaseUserId } from "@/lib/api-auth";
 import { logger } from "@/lib/logger";
 
 const createAlertPayloadSchema = z.object({
@@ -50,12 +51,18 @@ export async function GET(request: Request) {
   const requestId = randomUUID();
 
   try {
+    const userId = await requireSupabaseUserId(request);
     const url = new URL(request.url);
     const includeInactive = url.searchParams.get("includeInactive") === "true";
-    const data = await listPrimaryProfileAlerts(includeInactive);
+    const data = await listPrimaryProfileAlerts(userId, includeInactive);
 
     return buildSuccessResponse(requestId, data);
   } catch (error: unknown) {
+    if (error instanceof ApiAuthError) {
+      logger.warn({ requestId, status: error.status }, "Unauthorized GET /api/alerts request");
+      return buildErrorResponse(requestId, error.message, error.status);
+    }
+
     if (error instanceof AlertCenterServiceError) {
       logger.warn(
         { requestId, status: error.status, details: error.details },
@@ -73,6 +80,7 @@ export async function POST(request: Request) {
   const requestId = randomUUID();
 
   try {
+    const userId = await requireSupabaseUserId(request);
     const payload = await request.json().catch(() => null);
     const parsed = createAlertPayloadSchema.safeParse(payload);
     if (!parsed.success) {
@@ -80,6 +88,7 @@ export async function POST(request: Request) {
     }
 
     const alert = await createPrimaryProfileAlert({
+      userId,
       assetCode: parsed.data.assetCode,
       condition: parsed.data.condition,
       thresholdPrice: parsed.data.thresholdPrice,
@@ -88,6 +97,11 @@ export async function POST(request: Request) {
 
     return buildSuccessResponse(requestId, { alert }, 201);
   } catch (error: unknown) {
+    if (error instanceof ApiAuthError) {
+      logger.warn({ requestId, status: error.status }, "Unauthorized POST /api/alerts request");
+      return buildErrorResponse(requestId, error.message, error.status);
+    }
+
     if (error instanceof AlertCenterServiceError) {
       logger.warn(
         { requestId, status: error.status, details: error.details },

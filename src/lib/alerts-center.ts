@@ -1,6 +1,10 @@
 import { normalizeAssetCode } from "@/lib/assets";
 import { logger } from "@/lib/logger";
-import { sendPriceAlertEmail } from "@/lib/notifications";
+import {
+  getResolvedMailMode,
+  type MailDeliveryMode,
+  sendPriceAlertEmail,
+} from "@/lib/notifications";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
 export type AlertCenterRecord = {
@@ -16,6 +20,7 @@ export type AlertCenterRecord = {
 export type TestAlertEmailResult = {
   assetCode: string;
   currentPrice: number;
+  deliveryMode: MailDeliveryMode;
   recipientEmail: string;
   thresholdPrice: number;
 };
@@ -118,12 +123,12 @@ function mapSupabaseError(error: SupabaseErrorLike): AlertCenterServiceError {
   return new AlertCenterServiceError("Internal Server Error", 500, error);
 }
 
-async function getPrimaryProfile(): Promise<ProfileRow> {
+async function getProfileByUserId(userId: string): Promise<ProfileRow> {
   const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from("profiles")
     .select("id,email")
-    .limit(1)
+    .eq("id", userId)
     .maybeSingle();
 
   if (error) {
@@ -142,9 +147,10 @@ async function getPrimaryProfile(): Promise<ProfileRow> {
 }
 
 export async function listPrimaryProfileAlerts(
+  userId: string,
   includeInactive: boolean,
 ): Promise<{ alerts: AlertCenterRecord[]; profileEmail: string | null }> {
-  const profile = await getPrimaryProfile();
+  const profile = await getProfileByUserId(userId);
 
   const supabaseAdmin = getSupabaseAdmin();
   let query = supabaseAdmin
@@ -170,12 +176,13 @@ export async function listPrimaryProfileAlerts(
 }
 
 export async function createPrimaryProfileAlert(input: {
+  userId: string;
   assetCode: string;
   condition: "above" | "below";
   recipientEmail?: string;
   thresholdPrice: number;
 }): Promise<AlertCenterRecord> {
-  const profile = await getPrimaryProfile();
+  const profile = await getProfileByUserId(input.userId);
   const supabaseAdmin = getSupabaseAdmin();
   const normalizedAssetCode = normalizeAssetCode(input.assetCode);
   const normalizedRecipientEmail = input.recipientEmail?.trim();
@@ -214,10 +221,11 @@ export async function createPrimaryProfileAlert(input: {
 }
 
 export async function updatePrimaryProfileAlert(input: {
+  userId: string;
   alertId: string;
   isActive: boolean;
 }): Promise<AlertCenterRecord> {
-  const profile = await getPrimaryProfile();
+  const profile = await getProfileByUserId(input.userId);
   const supabaseAdmin = getSupabaseAdmin();
 
   const { data, error } = await supabaseAdmin
@@ -241,28 +249,17 @@ export async function updatePrimaryProfileAlert(input: {
 }
 
 export async function sendPrimaryProfileTestAlertEmail(input: {
+  userId: string;
   assetCode?: string;
   currentPrice: number;
+  deliveryMode?: MailDeliveryMode;
   recipientEmail?: string;
 }): Promise<TestAlertEmailResult> {
-  const profile = await getPrimaryProfile();
-  const supabaseAdmin = getSupabaseAdmin();
+  const profile = await getProfileByUserId(input.userId);
   const normalizedRecipientEmail = input.recipientEmail?.trim() || profile.email;
 
   if (!normalizedRecipientEmail) {
     throw new AlertCenterServiceError("Recipient email is required.", 400);
-  }
-
-  if (input.recipientEmail?.trim() && input.recipientEmail.trim() !== profile.email) {
-    const { error: profileUpdateError } = await supabaseAdmin
-      .from("profiles")
-      .update({ email: input.recipientEmail.trim() })
-      .eq("id", profile.id);
-
-    if (profileUpdateError) {
-      logger.error({ err: profileUpdateError }, "Failed to update primary profile email");
-      throw mapSupabaseError(profileUpdateError as SupabaseErrorLike);
-    }
   }
 
   const assetCode = normalizeAssetCode(input.assetCode || "WTI_USD");
@@ -270,17 +267,26 @@ export async function sendPrimaryProfileTestAlertEmail(input: {
   const safeCurrentPrice = Number.isFinite(currentPrice) && currentPrice > 0 ? currentPrice : 80;
   const thresholdPrice = Math.max(0.01, Number((safeCurrentPrice - 1).toFixed(2)));
 
-  const sent = await sendPriceAlertEmail({
-    to: normalizedRecipientEmail,
-    assetCode,
-    condition: "above",
-    thresholdPrice,
-    currentPrice: safeCurrentPrice,
-  });
+  const deliveryMode = getResolvedMailMode(input.deliveryMode);
+
+  const sent = await sendPriceAlertEmail(
+    {
+      to: normalizedRecipientEmail,
+      assetCode,
+      condition: "above",
+      thresholdPrice,
+      currentPrice: safeCurrentPrice,
+    },
+    { mailMode: deliveryMode },
+  );
 
   if (!sent) {
     throw new AlertCenterServiceError(
-      "Test email failed to send. Check MAIL_MODE and Maildev/Resend configuration.",
+      `Test email failed to send via ${deliveryMode}. Check ${
+        deliveryMode === "resend"
+          ? "RESEND_API_KEY and verified sender domain"
+          : "Maildev configuration"
+      }.`,
       500,
     );
   }
@@ -290,5 +296,6 @@ export async function sendPrimaryProfileTestAlertEmail(input: {
     assetCode,
     currentPrice: safeCurrentPrice,
     thresholdPrice,
+    deliveryMode,
   };
 }

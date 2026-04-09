@@ -24,8 +24,8 @@ describe("handleDashboardRequest", () => {
 
   it("returns snapshot payload with rate-limit headers when request is allowed", async () => {
     const snapshot = {
-      price: { usd: 80, sgd: 108, php: 4520, change24h: 1.1, changeAmount: 0.8 },
-      diesel: { usdPerGallon: 4, sgdPerLiter: 2, phpPerLiter: 50, change24h: -0.5 },
+      price: { usd: 80, php: 4520, change24h: 1.1, changeAmount: 0.8 },
+      diesel: { usdPerGallon: 4, phpPerLiter: 50, change24h: -0.5 },
       intelligence: {
         forecast: 81.2,
         trend: "BULLISH" as const,

@@ -2,11 +2,13 @@ import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { AlertCenterServiceError, sendPrimaryProfileTestAlertEmail } from "@/lib/alerts-center";
+import { ApiAuthError, requireSupabaseUserId } from "@/lib/api-auth";
 import { logger } from "@/lib/logger";
 
 const testEmailPayloadSchema = z.object({
   assetCode: z.string().min(1).optional(),
   currentPrice: z.coerce.number().finite().positive(),
+  deliveryMode: z.enum(["maildev", "resend"]).optional(),
   recipientEmail: z.string().email().optional(),
 });
 
@@ -45,6 +47,7 @@ export async function POST(request: Request) {
   const requestId = randomUUID();
 
   try {
+    const userId = await requireSupabaseUserId(request);
     const payload = await request.json().catch(() => null);
     const parsed = testEmailPayloadSchema.safeParse(payload);
     if (!parsed.success) {
@@ -57,13 +60,23 @@ export async function POST(request: Request) {
     }
 
     const result = await sendPrimaryProfileTestAlertEmail({
+      userId,
       assetCode: parsed.data.assetCode,
       currentPrice: parsed.data.currentPrice,
+      deliveryMode: parsed.data.deliveryMode,
       recipientEmail: parsed.data.recipientEmail,
     });
 
     return buildSuccessResponse(requestId, { result });
   } catch (error: unknown) {
+    if (error instanceof ApiAuthError) {
+      logger.warn(
+        { requestId, status: error.status },
+        "Unauthorized POST /api/alerts/test-email request",
+      );
+      return buildErrorResponse(requestId, error.message, error.status);
+    }
+
     if (error instanceof AlertCenterServiceError) {
       logger.warn(
         { requestId, status: error.status, details: error.details },

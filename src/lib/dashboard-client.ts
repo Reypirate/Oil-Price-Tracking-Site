@@ -2,7 +2,6 @@ export type DashboardSnapshot = {
   diesel: {
     change24h: number;
     phpPerLiter: number;
-    sgdPerLiter: number;
     usdPerGallon: number;
   };
   history: Array<{ date: string; price: number }>;
@@ -17,7 +16,6 @@ export type DashboardSnapshot = {
     change24h: number;
     changeAmount: number;
     php: number;
-    sgd: number;
     usd: number;
   };
 };

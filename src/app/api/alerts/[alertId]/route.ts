@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { AlertCenterServiceError, updatePrimaryProfileAlert } from "@/lib/alerts-center";
+import { ApiAuthError, requireSupabaseUserId } from "@/lib/api-auth";
 import { logger } from "@/lib/logger";
 
 const paramsSchema = z.object({
@@ -47,6 +48,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ alert
   const requestId = randomUUID();
 
   try {
+    const userId = await requireSupabaseUserId(request);
     const params = await context.params;
     const parsedParams = paramsSchema.safeParse(params);
     if (!parsedParams.success) {
@@ -65,12 +67,21 @@ export async function PATCH(request: Request, context: { params: Promise<{ alert
     }
 
     const alert = await updatePrimaryProfileAlert({
+      userId,
       alertId: parsedParams.data.alertId,
       isActive: parsedBody.data.isActive,
     });
 
     return buildSuccessResponse(requestId, { alert });
   } catch (error: unknown) {
+    if (error instanceof ApiAuthError) {
+      logger.warn(
+        { requestId, status: error.status },
+        "Unauthorized PATCH /api/alerts/[alertId] request",
+      );
+      return buildErrorResponse(requestId, error.message, error.status);
+    }
+
     if (error instanceof AlertCenterServiceError) {
       logger.warn(
         { requestId, status: error.status, details: error.details },

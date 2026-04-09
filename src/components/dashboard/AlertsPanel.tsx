@@ -7,6 +7,7 @@ import {
   type AlertRecord,
   createAlert,
   fetchAlerts as fetchAlertsApi,
+  type MailDeliveryMode,
   sendTestAlertEmail,
   updateAlert,
 } from "@/lib/alerts-client";
@@ -32,7 +33,7 @@ export function AlertsPanel({ currentPrice }: { currentPrice: number }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
+  const [sendingTestMode, setSendingTestMode] = useState<MailDeliveryMode | null>(null);
   const [isUpdatingIds, setIsUpdatingIds] = useState<Record<string, boolean>>({});
 
   const defaultThreshold = useMemo(() => currentPrice.toFixed(2), [currentPrice]);
@@ -143,12 +144,12 @@ export function AlertsPanel({ currentPrice }: { currentPrice: number }) {
     }
   };
 
-  const sendTestEmail = async () => {
-    if (isSendingTestEmail) {
+  const sendTestEmail = async (deliveryMode: MailDeliveryMode) => {
+    if (sendingTestMode) {
       return;
     }
 
-    setIsSendingTestEmail(true);
+    setSendingTestMode(deliveryMode);
     setError(null);
     setStatusMessage(null);
     try {
@@ -161,10 +162,13 @@ export function AlertsPanel({ currentPrice }: { currentPrice: number }) {
         recipientEmail,
         currentPrice,
         assetCode: DEFAULT_ASSET,
+        deliveryMode,
       });
 
       setStatusMessage(
-        `Test email sent to ${result.recipientEmail}. Check Maildev at http://localhost:1080.`,
+        result.deliveryMode === "maildev"
+          ? `Maildev test email sent to ${result.recipientEmail}. Check Maildev inbox at http://localhost:1080.`
+          : `Resend test email sent to ${result.recipientEmail}. Check your inbox (and spam folder).`,
       );
       setForm((prev) => ({
         ...prev,
@@ -173,12 +177,12 @@ export function AlertsPanel({ currentPrice }: { currentPrice: number }) {
     } catch (testError: unknown) {
       setError(testError instanceof Error ? testError.message : "Failed to send test email");
     } finally {
-      setIsSendingTestEmail(false);
+      setSendingTestMode(null);
     }
   };
 
   return (
-    <section id="alerts-section" className="glass-surface p-6 space-y-5">
+    <section className="glass-surface p-6 space-y-5">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-lg bg-[#22D3EE]/10">
@@ -204,19 +208,32 @@ export function AlertsPanel({ currentPrice }: { currentPrice: number }) {
         </button>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
-          onClick={sendTestEmail}
-          disabled={isSendingTestEmail}
+          onClick={() => void sendTestEmail("maildev")}
+          disabled={Boolean(sendingTestMode)}
           className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold tracking-[0.08em] uppercase border border-[#22D3EE]/30 text-[#67E8F9] hover:bg-[#22D3EE]/10 transition-colors disabled:opacity-50"
         >
-          {isSendingTestEmail ? (
+          {sendingTestMode === "maildev" ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
           ) : (
             <Send className="w-3.5 h-3.5" />
           )}
-          Send Test Email
+          Test via Maildev
+        </button>
+        <button
+          type="button"
+          onClick={() => void sendTestEmail("resend")}
+          disabled={Boolean(sendingTestMode)}
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold tracking-[0.08em] uppercase border border-[#10B981]/30 text-[#6EE7B7] hover:bg-[#10B981]/10 transition-colors disabled:opacity-50"
+        >
+          {sendingTestMode === "resend" ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <Send className="w-3.5 h-3.5" />
+          )}
+          Test via Resend
         </button>
       </div>
 

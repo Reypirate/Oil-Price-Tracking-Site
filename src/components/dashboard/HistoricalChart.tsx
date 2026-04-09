@@ -17,41 +17,37 @@ interface HistoricalChartProps {
 }
 
 export function HistoricalChart({ data, prediction }: HistoricalChartProps) {
-  const lastDate = data[data.length - 1]?.date || "";
   const nextDateLabel = "Forecast";
-
   const displayData = prediction ? [...data, { date: nextDateLabel, price: prediction }] : data;
 
   return (
     <div className="glass-surface p-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div>
           <h3 className="font-[Outfit] text-base font-semibold text-white tracking-tight">
             Market Intelligence Chart
           </h3>
           <p className="text-[10px] text-[#475569] tracking-[0.1em] uppercase mt-0.5">
-            WTI Crude Oil · Historical & Predicted
+            WTI Crude Oil - Historical and Predicted
           </p>
         </div>
         <div className="flex gap-1">
-          {["1W", "1M", "3M", "1Y"].map((t) => (
+          {["1W", "1M", "3M", "1Y"].map((range) => (
             <button
               type="button"
-              key={t}
+              key={range}
               className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-[0.1em] transition-all ${
-                t === "1M"
+                range === "1M"
                   ? "bg-[#22D3EE]/15 text-[#22D3EE] border border-[#22D3EE]/20"
                   : "text-[#475569] hover:text-[#94A3B8] hover:bg-white/[0.04] border border-transparent"
               }`}
             >
-              {t}
+              {range}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Chart Area */}
       <div className="h-[320px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={displayData} margin={{ top: 5, right: 5, bottom: 0, left: 5 }}>
@@ -74,7 +70,7 @@ export function HistoricalChart({ data, prediction }: HistoricalChartProps) {
               tickLine={false}
               tick={{ fill: "#475569", fontSize: 10, fontFamily: "JetBrains Mono" }}
               domain={["dataMin - 3", "dataMax + 3"]}
-              tickFormatter={(v: number) => `$${v}`}
+              tickFormatter={(value: number) => `$${value}`}
               width={50}
             />
             <Tooltip
@@ -127,7 +123,6 @@ export function HistoricalChart({ data, prediction }: HistoricalChartProps) {
         </ResponsiveContainer>
       </div>
 
-      {/* Legend */}
       <div className="flex items-center gap-6 mt-4 pt-4 border-t border-white/[0.04]">
         <div className="flex items-center gap-2">
           <div className="w-3 h-0.5 rounded-full bg-[#22D3EE]" />

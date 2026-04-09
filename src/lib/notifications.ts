@@ -11,6 +11,8 @@ type PriceAlertEmailPayload = {
   to: string;
 };
 
+export type MailDeliveryMode = "resend" | "maildev";
+
 let resendClient: Resend | undefined;
 let maildevTransporter: Transporter | undefined;
 
@@ -18,7 +20,11 @@ const DEFAULT_MAILDEV_HOST = "127.0.0.1";
 const DEFAULT_MAILDEV_PORT = 1025;
 const DEFAULT_FROM_EMAIL = "alerts@local.test";
 
-function getMailMode(): "resend" | "maildev" {
+export function getResolvedMailMode(modeOverride?: MailDeliveryMode): MailDeliveryMode {
+  if (modeOverride) {
+    return modeOverride;
+  }
+
   return env.MAIL_MODE === "maildev" ? "maildev" : "resend";
 }
 
@@ -132,8 +138,11 @@ async function sendViaMaildev(payload: PriceAlertEmailPayload): Promise<boolean>
   }
 }
 
-export async function sendPriceAlertEmail(payload: PriceAlertEmailPayload): Promise<boolean> {
-  if (getMailMode() === "maildev") {
+export async function sendPriceAlertEmail(
+  payload: PriceAlertEmailPayload,
+  options?: { mailMode?: MailDeliveryMode },
+): Promise<boolean> {
+  if (getResolvedMailMode(options?.mailMode) === "maildev") {
     return sendViaMaildev(payload);
   }
 

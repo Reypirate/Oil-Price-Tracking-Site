@@ -2,8 +2,8 @@ import { Dashboard } from "@/components/dashboard/Dashboard";
 
 /**
  * Page: / (root)
- * Server Component shell — renders the client-side Dashboard.
- * All data fetching happens via the /api/dashboard route inside the Dashboard component.
+ * Server component shell that renders the client-side dashboard.
+ * Data fetching is handled by /api/dashboard from the dashboard container.
  */
 export default function DashboardPage() {
   return <Dashboard />;

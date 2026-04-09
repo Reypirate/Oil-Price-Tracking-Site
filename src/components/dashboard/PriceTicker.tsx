@@ -4,16 +4,16 @@ import { TrendingDown, TrendingUp } from "lucide-react";
 
 interface PriceTickerProps {
   usdPrice: number;
-  sgdPrice: number;
   phpPrice: number;
+  phDieselPerLiter: number;
   change24h: number;
   changeAmount: number;
 }
 
 export function PriceTicker({
   usdPrice,
-  sgdPrice,
   phpPrice,
+  phDieselPerLiter,
   change24h,
   changeAmount,
 }: PriceTickerProps) {
@@ -59,25 +59,27 @@ export function PriceTicker({
         </span>
       </div>
 
-      {/* Regional Proxies */}
+      {/* Philippines-focused benchmarks */}
       <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/[0.06]">
         <div>
           <p className="text-[10px] font-bold text-[#64748B] tracking-[0.15em] uppercase flex items-center gap-1.5 mb-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444]" />
-            Singapore
-          </p>
-          <p className="text-lg font-bold text-white font-mono">
-            {formatCurrency(sgdPrice, "SGD")}
-          </p>
-        </div>
-        <div>
-          <p className="text-[10px] font-bold text-[#64748B] tracking-[0.15em] uppercase flex items-center gap-1.5 mb-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-[#3B82F6]" />
-            Philippines
+            PH Benchmark
           </p>
           <p className="text-lg font-bold text-white font-mono">
             {formatCurrency(phpPrice, "PHP")}
           </p>
+          <p className="text-[10px] text-[#475569] mt-0.5">WTI equivalent / barrel</p>
+        </div>
+        <div>
+          <p className="text-[10px] font-bold text-[#64748B] tracking-[0.15em] uppercase flex items-center gap-1.5 mb-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
+            PH Diesel
+          </p>
+          <p className="text-lg font-bold text-white font-mono">
+            {formatCurrency(phDieselPerLiter, "PHP")}
+          </p>
+          <p className="text-[10px] text-[#475569] mt-0.5">Estimated pump / liter</p>
         </div>
       </div>
     </div>

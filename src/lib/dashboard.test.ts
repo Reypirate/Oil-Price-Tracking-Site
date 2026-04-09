@@ -44,13 +44,14 @@ describe("buildDashboardSnapshot", () => {
         mood: "OPTIMISTIC",
         topKeywords: ["opec", "supply"],
       }),
-      getRegionalPrice: (usd, region) => (region === "SG" ? usd * 1.3 : usd * 55),
-      getDieselPerLiter: (usd, region) => (region === "SG" ? usd * 0.4 : usd * 20),
+      getRegionalPrice: (usd) => usd * 55,
+      getDieselPerLiter: (usd) => usd * 20,
     });
 
     expect(fetchOilPrice).toHaveBeenCalledTimes(2);
     expect(snapshot.price.usd).toBe(82.5);
-    expect(snapshot.price.sgd).toBeCloseTo(107.25, 5);
+    expect(snapshot.price.php).toBeCloseTo(4537.5, 5);
+    expect(snapshot.diesel.phpPerLiter).toBe(84);
     expect(snapshot.diesel.usdPerGallon).toBe(4.2);
     expect(snapshot.intelligence.forecast).toBe(83.33);
     expect(snapshot.intelligence.trend).toBe("BULLISH");

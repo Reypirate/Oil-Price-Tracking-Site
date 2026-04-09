@@ -1,24 +1,20 @@
 "use client";
 
-import { BarChart3, Bell, Droplets, RefreshCw } from "lucide-react";
-import Link from "next/link";
+import { Droplets, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { AppShell } from "@/components/layout/AppShell";
 import { type DashboardSnapshot, fetchDashboardSnapshot } from "@/lib/dashboard-client";
-import { AlertsPanel } from "./AlertsPanel";
-import { DieselComparison } from "./DieselComparison";
-import { HistoricalChart } from "./HistoricalChart";
-import { IntelligencePanel } from "./IntelligencePanel";
-import { PriceTicker } from "./PriceTicker";
+import { DASHBOARD_POLL_INTERVAL_MS, shouldDashboardPoll } from "@/lib/dashboard-polling";
+import { DashboardMarketRow, DashboardTopRow } from "./DashboardSections";
+import { HomeAlertsSummary } from "./HomeAlertsSummary";
 
-/* ─── Types ─── */
 type DashboardData = DashboardSnapshot;
 
-/* ─── Loading Skeleton ─── */
 function DashboardSkeleton() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 p-6">
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="glass-surface p-6 space-y-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {[1, 2, 3].map((item) => (
+        <div key={item} className="glass-surface p-6 space-y-4">
           <div className="skeleton h-4 w-24" />
           <div className="skeleton h-10 w-40" />
           <div className="skeleton h-4 w-32" />
@@ -35,7 +31,6 @@ function DashboardSkeleton() {
   );
 }
 
-/* ─── Error State ─── */
 function DashboardError({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
@@ -57,7 +52,35 @@ function DashboardError({ message, onRetry }: { message: string; onRetry: () => 
   );
 }
 
-/* ─── Main Dashboard Component ─── */
+function DashboardHeaderActions({
+  isLoading,
+  lastUpdated,
+  onRefresh,
+}: {
+  isLoading: boolean;
+  lastUpdated: Date | null;
+  onRefresh: () => void;
+}) {
+  return (
+    <>
+      {lastUpdated && (
+        <span className="hidden md:block text-[10px] text-[#475569] tracking-wider font-mono">
+          LAST UPDATE: {lastUpdated.toLocaleTimeString()}
+        </span>
+      )}
+      <button
+        type="button"
+        onClick={onRefresh}
+        disabled={isLoading}
+        className="p-2 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] transition-colors disabled:opacity-30"
+        aria-label="Refresh dashboard"
+      >
+        <RefreshCw className={`w-4 h-4 text-[#64748B] ${isLoading ? "animate-spin" : ""}`} />
+      </button>
+    </>
+  );
+}
+
 export function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -67,159 +90,86 @@ export function Dashboard() {
   const fetchDashboardData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+
     try {
       const snapshot = await fetchDashboardSnapshot();
       setData(snapshot);
       setLastUpdated(new Date());
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+    } catch (fetchError) {
+      setError(fetchError instanceof Error ? fetchError.message : "Unknown error");
     } finally {
       setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchDashboardData();
-    // Auto-refresh every 60 seconds
-    const interval = setInterval(fetchDashboardData, 60_000);
-    return () => clearInterval(interval);
+    let intervalId: ReturnType<typeof setInterval> | undefined;
+
+    const startPolling = () => {
+      if (intervalId) {
+        return;
+      }
+      intervalId = setInterval(() => {
+        void fetchDashboardData();
+      }, DASHBOARD_POLL_INTERVAL_MS);
+    };
+
+    const stopPolling = () => {
+      if (!intervalId) {
+        return;
+      }
+      clearInterval(intervalId);
+      intervalId = undefined;
+    };
+
+    const syncPollingWithVisibility = () => {
+      if (!shouldDashboardPoll(document.visibilityState)) {
+        stopPolling();
+        return;
+      }
+
+      void fetchDashboardData();
+      startPolling();
+    };
+
+    void fetchDashboardData();
+    if (shouldDashboardPoll(document.visibilityState)) {
+      startPolling();
+    }
+
+    document.addEventListener("visibilitychange", syncPollingWithVisibility);
+    window.addEventListener("focus", syncPollingWithVisibility);
+
+    return () => {
+      stopPolling();
+      document.removeEventListener("visibilitychange", syncPollingWithVisibility);
+      window.removeEventListener("focus", syncPollingWithVisibility);
+    };
   }, [fetchDashboardData]);
 
   return (
-    <div className="min-h-screen bg-[#0B1121]">
-      {/* ─── Navigation ─── */}
-      <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#0B1121]/80 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#22D3EE] to-[#0EA5E9] flex items-center justify-center shadow-lg shadow-[#22D3EE]/20">
-              <Droplets className="w-5 h-5 text-[#0B1121]" />
-            </div>
-            <div>
-              <h1 className="font-[Outfit] text-base font-bold text-white tracking-tight leading-none">
-                OILPRICE <span className="text-[#22D3EE]">INTELLIGENCE</span>
-              </h1>
-              <p className="text-[10px] text-[#64748B] font-medium tracking-[0.15em] uppercase">
-                Singapore × Philippines
-              </p>
-            </div>
-          </div>
-
-          {/* Nav Links */}
-          <nav className="hidden md:flex items-center gap-1">
-            <Link
-              href="/"
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold tracking-[0.08em] uppercase transition-all duration-200 bg-[#22D3EE]/10 text-[#22D3EE]"
-            >
-              <BarChart3 className="w-3.5 h-3.5" />
-              Dashboard
-            </Link>
-            <Link
-              href="#alerts-section"
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold tracking-[0.08em] uppercase transition-all duration-200 text-[#64748B] hover:text-[#94A3B8] hover:bg-white/[0.04]"
-            >
-              <Bell className="w-3.5 h-3.5" />
-              Alerts
-            </Link>
-          </nav>
-
-          {/* Right side */}
-          <div className="flex items-center gap-3">
-            {lastUpdated && (
-              <span className="hidden md:block text-[10px] text-[#475569] tracking-wider font-mono">
-                LAST UPDATE: {lastUpdated.toLocaleTimeString()}
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={fetchDashboardData}
-              disabled={isLoading}
-              className="p-2 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] transition-colors disabled:opacity-30"
-            >
-              <RefreshCw className={`w-4 h-4 text-[#64748B] ${isLoading ? "animate-spin" : ""}`} />
-            </button>
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#1E293B] to-[#334155] border border-white/10 flex items-center justify-center">
-              <span className="text-[11px] font-bold text-white">JR</span>
-            </div>
-          </div>
+    <AppShell
+      headerActions={
+        <DashboardHeaderActions
+          isLoading={isLoading}
+          lastUpdated={lastUpdated}
+          onRefresh={() => {
+            void fetchDashboardData();
+          }}
+        />
+      }
+    >
+      {isLoading && !data && <DashboardSkeleton />}
+      {error && !data && (
+        <DashboardError message={error} onRetry={() => void fetchDashboardData()} />
+      )}
+      {data && (
+        <div className="space-y-5">
+          <DashboardTopRow data={data} />
+          <DashboardMarketRow data={data} />
+          <HomeAlertsSummary />
         </div>
-      </header>
-
-      {/* ─── Content ─── */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        {isLoading && !data && <DashboardSkeleton />}
-        {error && !data && <DashboardError message={error} onRetry={fetchDashboardData} />}
-        {data && (
-          <div className="space-y-5">
-            {/* ─── Top Row: 3-Column Grid ─── */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              <PriceTicker
-                usdPrice={data.price.usd}
-                sgdPrice={data.price.sgd}
-                phpPrice={data.price.php}
-                change24h={data.price.change24h}
-                changeAmount={data.price.changeAmount}
-              />
-              <IntelligencePanel
-                mood={data.intelligence.mood}
-                score={data.intelligence.sentimentScore}
-                trend={data.intelligence.trend}
-                keywords={data.intelligence.keywords}
-                forecast={data.intelligence.forecast}
-              />
-              {/* Forecast Summary Card */}
-              <div className="glass-surface p-6 flex flex-col justify-between">
-                <div>
-                  <p className="text-[10px] font-semibold text-[#64748B] tracking-[0.2em] uppercase mb-1">
-                    Tomorrow&apos;s Forecast
-                  </p>
-                  <p className="font-[Outfit] text-4xl font-bold text-white tracking-tight">
-                    ${data.intelligence.forecast.toFixed(2)}
-                  </p>
-                  <p className="text-xs text-[#64748B] mt-1">Linear Regression · Daily Target</p>
-                </div>
-                <div className="mt-6 pt-4 border-t border-white/[0.06]">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-semibold text-[#64748B] tracking-[0.15em] uppercase">
-                      Confidence
-                    </span>
-                    <span className="text-[10px] font-mono text-[#22D3EE]">8 data points</span>
-                  </div>
-                  <div className="mt-2 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-[#22D3EE] to-[#0EA5E9] transition-all duration-1000"
-                      style={{ width: "72%" }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* ─── Middle Row: Diesel + Chart ─── */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-              <DieselComparison
-                usdPerGallon={data.diesel.usdPerGallon}
-                sgdPerLiter={data.diesel.sgdPerLiter}
-                phpPerLiter={data.diesel.phpPerLiter}
-                change24h={data.diesel.change24h}
-              />
-              <div className="lg:col-span-2">
-                <HistoricalChart data={data.history} prediction={data.intelligence.forecast} />
-              </div>
-            </div>
-
-            <AlertsPanel currentPrice={data.price.usd} />
-          </div>
-        )}
-      </main>
-
-      {/* ─── Footer ─── */}
-      <footer className="max-w-7xl mx-auto px-6 py-8 border-t border-white/[0.04]">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-2 text-[10px] text-[#334155] tracking-[0.15em] uppercase font-medium">
-          <p>Estimated regional prices based on global crude benchmarks</p>
-          <p>© 2026 OilPrice Intelligence · v0.1.0</p>
-        </div>
-      </footer>
-    </div>
+      )}
+    </AppShell>
   );
 }
